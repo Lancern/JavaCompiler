@@ -1,4 +1,4 @@
-add_library(Frontend STATIC
+add_library(JVCFrontend STATIC
         SourceManager.cpp
         SourceFileInfo.cpp
         Diagnostics.cpp
