@@ -2,10 +2,9 @@
 // Created by Sirui Mu on 2019/12/19.
 //
 
+#include "Infrastructure/Stream.h"
 #include "Frontend/Diagnostics.h"
 #include "Frontend/CompilerInstance.h"
-
-#include <iostream>
 
 namespace jvc {
 
@@ -70,81 +69,66 @@ const char* getDiagLevelName(DiagnosticsLevel level) {
   }
 }
 
-std::string convertLocToString(SourceLocation loc) {
+void dumpSourceLoc(SourceLocation loc) {
+  auto& o = errs();
   if (!loc.valid()) {
-    return std::string("<invalid loc>");
+    o << "<invalid loc>";
+    return;
   }
 
-  std::string s;
-  s.append(std::to_string(loc.row()));
-  s.push_back(':');
-  s.append(std::to_string(loc.col()));
-
-  return s;
+  o << loc.row() << ':' << loc.col();
 }
 
-std::string convertRangeToString(SourceRange range) {
+void dumpSourceRange(SourceRange range) {
+  auto& o = errs();
   if (!range.valid()) {
-    return std::string("<invalid range>");
+    o << "<invalid range>";
+    return;
   }
 
-  std::string s;
-  s.append(convertLocToString(range.start()));
-  s.push_back('-');
-  s.append(convertLocToString(range.end()));
-
-  return s;
-}
-
-template <typename OutputStream>
-OutputStream& dumpText(OutputStream& o, std::string_view text, int indent = 0) {
-  const auto npos = std::string_view::npos;
-  size_t len;
-  while (!text.empty()) {
-    len = text.find('\n');
-    if (len == npos) {
-      len = text.length();
-    }
-
-    for (auto i = 0; i < indent; ++i) {
-      o << ' ';
-    }
-    o << text.substr(0, len);
-
-    if (len + 1 > text.length()) {
-      break;
-    }
-    text.remove_prefix(len + 1);
-  }
-
-  return o;
+  dumpSourceLoc(range.start());
+  o << '-';
+  dumpSourceLoc(range.end());
 }
 
 } // namespace <anonymous>
 
 void DiagnosticsEngine::Emit(const DiagnosticsMessage& message) {
   auto level = mapDiagLevel(message.level());
+  auto& o = errs();
 
-  std::cerr << "jvc: " << getDiagLevelName(level) << ": "
-            << message.FormatMessage() << std::endl;
+  o << "jvc: " << getDiagLevelName(level) << ": "
+    << message.FormatMessage() << '\n';
 
   if (message.range().valid()) {
     auto sourceFileInfo = _ci.GetSourceManager().GetSourceFileInfo(message.range());
     if (sourceFileInfo) {
-      std::cerr << "  In file " << sourceFileInfo->path() << ':'
-                << convertRangeToString(message.range()) << ':' << std::endl;
+      auto indGuard1 = o.PushIndent();
+
+      o << "In file " << sourceFileInfo->path() << ':';
+      dumpSourceRange(message.range());
+      o << ":\n";
+
+      auto indGuard2 = o.PushIndent();
       auto sourceView = sourceFileInfo->GetViewInRange(message.range());
-      dumpText(std::cerr, sourceView, 4);
+      o << sourceView << '\n';
     }
   } else if (message.location().valid()) {
     auto sourceFileInfo = _ci.GetSourceManager().GetSourceFileInfo(message.location());
     if (sourceFileInfo) {
-      std::cerr << "  In file " << sourceFileInfo->path() << ':'
-                << convertLocToString(message.location()) << std::endl;
+      auto indGuard1 = o.PushIndent();
+
+      o << "In file " << sourceFileInfo->path() << ':';
+      dumpSourceLoc(message.location());
+      o << ":\n";
+
+      auto indGuard2 = o.PushIndent();
       auto sourceView = sourceFileInfo->GetViewAtLoc(message.location());
-      dumpText(std::cerr, sourceView, 4);
+      o << sourceView << '\n';
     }
   }
+
+  o << '\n';
 
   if (shouldExit(level)) {
     std::exit(1);
