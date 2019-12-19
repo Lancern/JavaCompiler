@@ -81,6 +81,13 @@ public:
   std::string_view GetViewAtLoc(SourceLocation loc) const;
 
   /**
+   * @brief Get the whole content of the source code file.
+   * @return the whole content of the source code file.
+   */
+  [[nodiscard]]
+  std::string_view GetContent() const;
+
+  /**
    * @brief Get the location of the EOF indicator.
    * @return location of the EOF indicator.
    */

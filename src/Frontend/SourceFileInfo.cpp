@@ -84,6 +84,9 @@ public:
     return GetViewInRange(row, row + 1);
   }
 
+  [[nodiscard]]
+  std::string_view content() const { return _content; }
+
 private:
   std::string _content;
   std::vector<size_t> _lineStarts;
@@ -134,6 +137,10 @@ std::string_view SourceFileInfo::GetViewAtLoc(SourceLocation loc) const {
     return std::string_view { };
   }
   return _lineBuffer->GetLineView(loc.row());
+}
+
+std::string_view SourceFileInfo::GetContent() const {
+  return _lineBuffer->content();
 }
 
 SourceLocation SourceFileInfo::GetEOFLoc() const {
