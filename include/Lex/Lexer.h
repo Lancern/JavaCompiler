@@ -7,7 +7,7 @@
 
 #include "Infrastructure/Stream.h"
 #include "Lex/Token.h"
-#include "SourceLocationBuilder.h"
+#include "Lex/SourceLocationBuilder.h"
 
 #include <memory>
 

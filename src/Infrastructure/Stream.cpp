@@ -35,7 +35,8 @@ public:
 
   size_t Read(void *buffer, size_t bufferSize) override {
     auto copySize = std::min(bufferSize, _bufferSize - _readPtr);
-    memcpy(buffer, _buffer, copySize);
+    memcpy(buffer, reinterpret_cast<const char *>(_buffer) + _readPtr, copySize);
+    _readPtr += copySize;
     return copySize;
   }
 

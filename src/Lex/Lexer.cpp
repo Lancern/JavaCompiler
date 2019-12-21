@@ -6,6 +6,7 @@
 #include "Frontend/SourceLocation.h"
 #include "Lex/Lexer.h"
 #include "Lex/Token.h"
+#include "Lex/SourceLocationBuilder.h"
 #include "LexerStreamReader.h"
 
 #include <cctype>

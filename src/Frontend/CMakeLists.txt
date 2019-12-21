@@ -8,4 +8,5 @@ add_library(JVCFrontend STATIC
         ${JVC_INCLUDE_DIR}/Frontend/SourceManager.h
         ${JVC_INCLUDE_DIR}/Frontend/SourceLocation.h
         ${JVC_INCLUDE_DIR}/Frontend/Diagnostics.h)
-target_link_libraries(JVCFrontend JVCInfrastructure)
+target_link_libraries(JVCFrontend
+        PUBLIC JVCInfrastructure)

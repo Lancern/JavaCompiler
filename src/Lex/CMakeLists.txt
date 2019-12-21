@@ -4,4 +4,5 @@ add_library(JVCLex STATIC
         LexerStreamReader.h
         ${JVC_INCLUDE_DIR}/Lex/Lexer.h
         ${JVC_INCLUDE_DIR}/Lex/Token.h)
-target_link_libraries(JVCLex JVCFrontend JVCInfrastructure)
+target_link_libraries(JVCLex
+        PUBLIC JVCFrontend JVCInfrastructure)
