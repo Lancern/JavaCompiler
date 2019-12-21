@@ -36,6 +36,12 @@ public:
    */
   explicit SourceFileInfo(int fileId, std::string path, std::unique_ptr<SourceFileLineBuffer> lineBuffer);
 
+  SourceFileInfo(const SourceFileInfo &) = delete;
+  SourceFileInfo(SourceFileInfo &&) noexcept = default;
+
+  SourceFileInfo& operator=(const SourceFileInfo &) = delete;
+  SourceFileInfo& operator=(SourceFileInfo &&) noexcept = default;
+
   /**
    * @brief Destroy this @see SourceFileInfo object.
    */

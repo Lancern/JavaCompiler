@@ -256,7 +256,7 @@ StreamWriter& operator<<(StreamWriter& o, std::string_view s);
     h(long double)
 
 #define GENERATE_STREAMWRITER_FORMAT_OPERATOR(t) \
-    StreamWriter& operator<<(StreamWriter& o, t v) { return o << std::to_string(v); }
+    inline StreamWriter& operator<<(StreamWriter& o, t v) { return o << std::to_string(v); }
 BUILTIN_FORMATTED_TYPE_LIST(GENERATE_STREAMWRITER_FORMAT_OPERATOR)
 #undef GENERATE_STREAMWRITER_FORMAT_OPERATOR
 

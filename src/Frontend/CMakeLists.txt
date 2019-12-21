@@ -1,6 +1,8 @@
 add_library(JVCFrontend STATIC
         SourceManager.cpp
         SourceFileInfo.cpp
+        SourceFileLineBuffer.h
+        SourceFileLineBuffer.cpp
         Diagnostics.cpp
         ${JVC_INCLUDE_DIR}/Frontend/CompilerInstance.h
         ${JVC_INCLUDE_DIR}/Frontend/SourceManager.h

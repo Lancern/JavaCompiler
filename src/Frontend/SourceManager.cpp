@@ -5,6 +5,7 @@
 #include "Frontend/CompilerInstance.h"
 #include "Frontend/SourceManager.h"
 #include "Frontend/Diagnostics.h"
+#include "SourceFileLineBuffer.h"
 
 namespace jvc {
 
