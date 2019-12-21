@@ -13,6 +13,7 @@
 namespace jvc {
 
 class CompilerInstance;
+class StreamWriter;
 
 #define JVC_DIAGNOSTICS_LEVELS(h)   \
   h(Info)                           \
@@ -91,13 +92,6 @@ public:
   DiagnosticsLevel level() const { return _level; }
 
   /**
-   * @brief Get the diagnostics message.
-   * @return the diagnostics message.
-   */
-  [[nodiscard]]
-  virtual std::string FormatMessage() const = 0;
-
-  /**
    * @brief Get the source location from which the diagnostics is triggered.
    * @return the source location from which the diagnostics is triggered.
    */
@@ -110,6 +104,12 @@ public:
    */
   [[nodiscard]]
   SourceRange range() const { return _range; }
+
+  /**
+   * @brief Dump the message of this diagnostics message to the given output.
+   * @param output a @see StreamWriter object associated with the output stream.
+   */
+  virtual void DumpMessage(StreamWriter& output) const = 0;
 
 protected:
   /**

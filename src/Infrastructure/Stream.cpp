@@ -4,6 +4,8 @@
 
 #include "Infrastructure/Stream.h"
 
+#include <algorithm>
+
 namespace jvc {
 
 namespace {
@@ -21,6 +23,26 @@ public:
 
 private:
   std::istream& _inner;
+};
+
+class MemoryInputStream : public InputStream {
+public:
+  explicit MemoryInputStream(const void* buffer, size_t bufferSize)
+    : _buffer(buffer),
+      _bufferSize(bufferSize),
+      _readPtr(0)
+  { }
+
+  size_t Read(void *buffer, size_t bufferSize) override {
+    auto copySize = std::min(bufferSize, _bufferSize - _readPtr);
+    memcpy(buffer, _buffer, copySize);
+    return copySize;
+  }
+
+private:
+  const void* _buffer;
+  size_t _bufferSize;
+  size_t _readPtr;
 };
 
 class STLOutputStreamWrapper : public OutputStream {
@@ -43,6 +65,10 @@ private:
 
 std::unique_ptr<InputStream> InputStream::FromSTL(std::istream &inner) {
   return std::make_unique<STLInputStreamWrapper>(inner);
+}
+
+std::unique_ptr<InputStream> InputStream::FromBuffer(const void *buffer, size_t bufferSize) {
+  return std::make_unique<MemoryInputStream>(buffer, bufferSize);
 }
 
 std::unique_ptr<OutputStream> OutputStream::FromSTL(std::ostream &inner) {

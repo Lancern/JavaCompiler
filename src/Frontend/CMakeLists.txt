@@ -4,9 +4,9 @@ add_library(JVCFrontend STATIC
         Diagnostics.cpp
         ../Infrastructure/Stream.cpp
         ../Infrastructure/StreamWriter.cpp
-        ${project_include_dir}/Infrastructure/ArrayView.h
-        ${project_include_dir}/Infrastructure/Stream.h
-        ${project_include_dir}/Frontend/CompilerInstance.h
-        ${project_include_dir}/Frontend/SourceManager.h
-        ${project_include_dir}/Frontend/SourceLocation.h
-        ${project_include_dir}/Frontend/Diagnostics.h)
+        ${JVC_INCLUDE_DIR}/Infrastructure/ArrayView.h
+        ${JVC_INCLUDE_DIR}/Infrastructure/Stream.h
+        ${JVC_INCLUDE_DIR}/Frontend/CompilerInstance.h
+        ${JVC_INCLUDE_DIR}/Frontend/SourceManager.h
+        ${JVC_INCLUDE_DIR}/Frontend/SourceLocation.h
+        ${JVC_INCLUDE_DIR}/Frontend/Diagnostics.h)

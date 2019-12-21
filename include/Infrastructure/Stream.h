@@ -25,6 +25,15 @@ public:
   static std::unique_ptr<InputStream> FromSTL(std::istream& inner);
 
   /**
+   * @brief Create a @see InputStream wrapper around the given memory buffer.
+   * @param buffer pointer to the memory buffer.
+   * @param bufferSize size of the memory buffer, in bytes.
+   * @return a @see std::unique_ptr to a @see InputStream object that uses the given buffer as the underlying data
+   * source.
+   */
+  static std::unique_ptr<InputStream> FromBuffer(const void* buffer, size_t bufferSize);
+
+  /**
    * @brief Destroy a @see InputStream object.
    */
   virtual ~InputStream() = default;

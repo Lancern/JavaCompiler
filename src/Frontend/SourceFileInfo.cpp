@@ -2,6 +2,7 @@
 // Created by Sirui Mu on 2019/12/19.
 //
 
+#include "Infrastructure/Stream.h"
 #include "Frontend/SourceManager.h"
 #include "Frontend/Diagnostics.h"
 
@@ -22,14 +23,10 @@ public:
       _errorCode(errorCode)
   { }
 
-  [[nodiscard]]
-  std::string FormatMessage() const override {
-    std::string msg("cannot load source file: ");
-    msg.append(_path);
-    msg.append(": ");
-    msg.append(std::strerror(_errorCode));
-
-    return msg;
+  void DumpMessage(StreamWriter &output) const override {
+    output << "cannot load source file: "
+           << _path << ": "
+           << std::strerror(_errorCode);
   }
 
 private:
@@ -125,6 +122,8 @@ SourceFileInfo::SourceFileInfo(int fileId, std::string path, std::unique_ptr<Sou
       _lineBuffer(std::move(lineBuffer))
 { }
 
+SourceFileInfo::~SourceFileInfo() = default;
+
 std::string_view SourceFileInfo::GetViewInRange(SourceRange range) const {
   if (!range.valid()) {
     return std::string_view { };
@@ -145,6 +144,11 @@ std::string_view SourceFileInfo::GetContent() const {
 
 SourceLocation SourceFileInfo::GetEOFLoc() const {
   return SourceLocation { _id, static_cast<int>(_lineBuffer->lines()), 1 };
+}
+
+std::unique_ptr<InputStream> SourceFileInfo::CreateInputStream() const {
+  auto view = _lineBuffer->content();
+  return InputStream::FromBuffer(view.data(), view.size());
 }
 
 SourceFileInfo SourceFileInfo::Load(int fileId, const std::string& path, DiagnosticsEngine& diag) {

@@ -17,6 +17,7 @@
 
 namespace jvc {
 
+class InputStream;
 class CompilerInstance;
 
 /**
@@ -34,6 +35,11 @@ public:
    * @param lineBuffer the line buffer.
    */
   explicit SourceFileInfo(int fileId, std::string path, std::unique_ptr<SourceFileLineBuffer> lineBuffer);
+
+  /**
+   * @brief Destroy this @see SourceFileInfo object.
+   */
+  ~SourceFileInfo();
 
   /**
    * @brief Get the ID of the source file.
@@ -86,6 +92,13 @@ public:
    */
   [[nodiscard]]
   std::string_view GetContent() const;
+
+  /**
+   * @brief Create a @see InputStream for accessing contents in this source code file.
+   * @return a @see InputStream for accessing contents in this source code file.
+   */
+  [[nodiscard]]
+  std::unique_ptr<InputStream> CreateInputStream() const;
 
   /**
    * @brief Get the location of the EOF indicator.

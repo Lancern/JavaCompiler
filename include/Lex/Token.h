@@ -222,26 +222,27 @@ public:
    * @param name the name of the identifier.
    * @param range the source code range of the identifier.
    */
-  explicit IdentifierToken(std::string_view name, SourceRange range)
+  explicit IdentifierToken(std::string name, SourceRange range)
     : Token { TokenKind::Identifier, range },
-      _name(name)
+      _name(std::move(name))
   { }
 
   /**
    * @brief Get the name of the identifier.
    *
-   * @return std::string_view the name of the identifier.
+   * @return std::string the name of the identifier.
    */
   [[nodiscard]]
-  std::string_view name() const { return _name; }
+  const std::string& name() const { return _name; }
 
 private:
-  std::string_view _name;
+  std::string _name;
 }; // class IdentifierToken
 
 #define JVC_LITERAL_TYPE_LIST(h) \
     h(Number) \
-    h(String)
+    h(String) \
+    h(Character)
 
 /**
  * @brief Kind of literals.
@@ -285,6 +286,46 @@ private:
 };
 
 /**
+ * @brief Prefix of number literals.
+ */
+enum class NumberLiteralPrefix {
+  /**
+   * @brief No prefixes.
+   */
+  None,
+
+  /**
+   * @brief The '0' prefix.
+   */
+  Oct,
+
+  /**
+   * @brief The '0x' or '0X' prefix.
+   */
+  Hex
+};
+
+/**
+ * @brief Suffix of number literals.
+ */
+enum class NumberLiteralSuffix {
+  /**
+   * @brief No suffixes.
+   */
+  None,
+
+  /**
+   * @brief The `l` suffix.
+   */
+  Long,
+
+  /**
+   * @brief The `f` suffix.
+   */
+  Float,
+};
+
+/**
  * @brief Specialize a literal token that represents a number literal.
  */
 class NumberLiteralToken : public LiteralToken {
@@ -294,57 +335,36 @@ public:
    * 64-bit signed integer.
    * @param source the source of the literal token.
    * @param intValue the literal value in integer representation.
+   * @param prefix literal prefix.
+   * @param suffix literal suffix.
    * @param range the source code range of this token.
    */
-  explicit NumberLiteralToken(std::string_view source, int64_t intValue, SourceRange range)
+  explicit NumberLiteralToken(
+      int64_t intValue, NumberLiteralPrefix prefix, NumberLiteralSuffix suffix, SourceRange range)
     : LiteralToken { LiteralKind::Number, range },
-      _source(source),
       _isIntValue(true),
-      _isSigned(true),
       _intValue(intValue),
-      _uintValue(0),
-      _floatValue(static_cast<double>(intValue))
-  { }
-
-  /**
-   * @brief Initialize a new @see NumberLiteralToken object that represents an integer literal whose value fits in a
-   * 64-bit unsigned integer.
-   * @param source the source of the literal token.
-   * @param uintValue the literal value in integer representation.
-   * @param range the source code range of this token.
-   */
-  explicit NumberLiteralToken(std::string_view source, uint64_t uintValue, SourceRange range)
-    : LiteralToken { LiteralKind::Number, range },
-      _source(source),
-      _isIntValue(true),
-      _isSigned(false),
-      _intValue(0),
-      _uintValue(uintValue),
-      _floatValue(static_cast<double>(uintValue))
+      _floatValue(static_cast<double>(intValue)),
+      _prefix(prefix),
+      _suffix(suffix)
   { }
 
   /**
    * @brief Initialize a new @see NumberLiteralToken object that represents a floating-point number literal.
-   * @param source the source of the literal token.
    * @param intValue the literal value in integer representation.
+   * @param prefix literal prefix.
+   * @param suffix literal suffix.
    * @param range the source code range of this token.
    */
-  explicit NumberLiteralToken(std::string_view source, double floatValue, SourceRange range)
+  explicit NumberLiteralToken(
+      double floatValue, NumberLiteralPrefix prefix, NumberLiteralSuffix suffix, SourceRange range)
     : LiteralToken { LiteralKind::Number, range },
-      _source(source),
       _isIntValue(false),
-      _isSigned(false),
       _intValue(0),
-      _uintValue(0),
-      _floatValue(floatValue)
+      _floatValue(floatValue),
+      _prefix(prefix),
+      _suffix(suffix)
   { }
-
-  /**
-   * @brief Get the source of this literal token.
-   * @return the source of this literal token.
-   */
-  [[nodiscard]]
-  std::string_view source() const { return _source; }
 
   /**
    * @brief Determine whether this literal token represents an integer.
@@ -354,25 +374,11 @@ public:
   bool IsInteger() const { return _isIntValue; }
 
   /**
-   * @brief Determine whether this literal token represents a signed integer.
-   * @return whether this literal token represents a signed integer.
-   */
-  [[nodiscard]]
-  bool IsSignedInteger() const { return _isSigned; }
-
-  /**
    * @brief Get 64-bit signed integer representation of this literal token.
    * @return 64-bit signed integer representation of this literal token.
    */
   [[nodiscard]]
   int64_t AsInt64() const { return _intValue; }
-
-  /**
-   * @brief Get 64-bit unsigned integer representation of this literal token.
-   * @return 64-bit unsigned integer representation of this literal token.
-   */
-  [[nodiscard]]
-  uint64_t AsUInt64() const { return _uintValue; }
 
   /**
    * @brief Get double precision floating point representation of this literal token.
@@ -381,13 +387,26 @@ public:
   [[nodiscard]]
   double AsDouble() const { return _floatValue; }
 
+  /**
+   * @brief Get the prefix of the number literal.
+   * @return the prefix of the number literal.
+   */
+  [[nodiscard]]
+  NumberLiteralPrefix prefix() const { return _prefix; }
+
+  /**
+   * @brief Get the literal suffix.
+   * @return the literal suffix.
+   */
+  [[nodiscard]]
+  NumberLiteralSuffix suffix() const { return _suffix; }
+
 private:
-  std::string_view _source;
   bool _isIntValue;
-  bool _isSigned;
   int64_t _intValue;
-  uint64_t _uintValue;
   double _floatValue;
+  NumberLiteralPrefix _prefix;
+  NumberLiteralSuffix _suffix;
 };
 
 /**
@@ -398,11 +417,13 @@ public:
   /**
    * @brief Initialize a new @see StringLiteralToken class.
    * @param source source of this literal token.
+   * @param content actual content of this literal token.
    * @param range source range of this literal token.
    */
-  explicit StringLiteralToken(std::string_view source, SourceRange range)
+  explicit StringLiteralToken(std::string source, std::string content, SourceRange range)
     : LiteralToken { LiteralKind::String, range },
-      _source(source)
+      _source(std::move(source)),
+      _content(std::move(content))
   { }
 
   /**
@@ -410,17 +431,54 @@ public:
    * @return the source of this literal token.
    */
   [[nodiscard]]
-  std::string_view source() const { return _source; }
+  const std::string& source() const { return _source; }
 
   /**
-   * @brief Parse this literal string and returns the actual literal value.
-   * @return the actual literal value.
+   * @brief Get the actual content of this string literal.
+   * @return the actual content of this string literal.
    */
   [[nodiscard]]
-  std::string ParseValue() const;
+  const std::string& content() const { return _content; }
 
 private:
-  std::string_view _source;
+  std::string _source;
+  std::string _content;
+};
+
+/**
+ * @brief Specialse a literal token that represents a character literal.
+ */
+class CharacterLiteralToken : public LiteralToken {
+public:
+  /**
+   * @brief Initialize a new @see CharacterLiteralToken object.
+   * @param source the source of this token.
+   * @param ch the character represented by this token.
+   * @param range the source code range of this token.
+   */
+  explicit CharacterLiteralToken(std::string source, char ch, SourceRange range)
+    : LiteralToken { LiteralKind::Character, range },
+      _source(std::move(source)),
+      _ch(ch)
+  { }
+
+  /**
+   * @brief Get the source of this token.
+   * @return the source of this token.
+   */
+  [[nodiscard]]
+  const std::string& source() const { return _source; }
+
+  /**
+   * @brief Get the character value represented by this token.
+   * @return the character value represented by this token.
+   */
+  [[nodiscard]]
+  char value() const { return _ch; }
+
+private:
+  std::string _source;
+  char _ch;
 };
 
 #define JVC_DELIMITER_LIST(h) \
@@ -500,6 +558,7 @@ private:
     h(Less) \
     h(LessOrEqual) \
     h(Modulo) \
+    h(ModuloAssignment) \
     h(Multiply) \
     h(MultiplyAssignment) \
     h(Not) \
@@ -507,6 +566,7 @@ private:
     h(RightShift) \
     h(RightShiftAssignment) \
     h(LogicalAnd) \
+    h(LogicalOr) \
     h(SubtractAssignment) \
     h(Subtract) \
     h(UnsignedRightShift) \
@@ -548,6 +608,21 @@ private:
 };
 
 /**
+ * @brief Kind of comment tokens.
+ */
+enum class CommentKind {
+  /**
+   * @brief Line comments.
+   */
+  LineComment,
+
+  /**
+   * @brief Block comments.
+   */
+  BlockComment,
+};
+
+/**
  * @brief Specialize a lexical token that represents a comment.
  */
 class CommentToken : public Token {
@@ -555,22 +630,32 @@ public:
   /**
    * @brief Initialize a new @see CommentToken object.
    * @param content the content of the comment.
+   * @param kind kind of this comment.
    * @param range the source code range of the comment.
    */
-  explicit CommentToken(std::string_view content, SourceRange range)
+  explicit CommentToken(std::string content, CommentKind kind, SourceRange range)
     : Token { TokenKind::Comment, range },
-      _content(content)
+      _kind(kind),
+      _content(std::move(content))
   { }
+
+  /**
+   * @brief Get the kind of this comment token.
+   * @return kind of this comment token.
+   */
+  [[nodiscard]]
+  CommentKind commentKind() const { return _kind; }
 
   /**
    * @brief Get the content of the comment.
    * @return the content of the comment.
    */
   [[nodiscard]]
-  std::string_view content() const { return _content; }
+  const std::string& content() const { return _content; }
 
 private:
-  std::string_view _content;
+  CommentKind _kind;
+  std::string _content;
 };
 
 /**

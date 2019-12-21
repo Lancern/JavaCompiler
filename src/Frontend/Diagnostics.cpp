@@ -27,9 +27,8 @@ public:
         _message(std::move(message))
   { }
 
-  [[nodiscard]]
-  std::string FormatMessage() const override {
-    return _message;
+  void DumpMessage(StreamWriter& output) const override {
+    output << _message;
   }
 
 private:
@@ -97,8 +96,9 @@ void DiagnosticsEngine::Emit(const DiagnosticsMessage& message) {
   auto level = mapDiagLevel(message.level());
   auto& o = errs();
 
-  o << "jvc: " << getDiagLevelName(level) << ": "
-    << message.FormatMessage() << '\n';
+  o << "jvc: " << getDiagLevelName(level) << ": ";
+  message.DumpMessage(o);
+  o << '\n';
 
   if (message.range().valid()) {
     auto sourceFileInfo = _ci.GetSourceManager().GetSourceFileInfo(message.range());
