@@ -67,4 +67,111 @@ TEST(InputStream, Read) {
       << "Should return: `o`, but return: `" << outputBuffer << "`";
 }
 
+TEST(OutputStream, CreateFromSTL) {
+  std::stringstream output { };
+  auto stream = jvc::OutputStream::FromSTL(output);
+  ASSERT_TRUE(stream) << "FromSTL function returns nullptr.";
+
+  stream->Write("hello", 5);
+
+  auto str = output.str();
+  ASSERT_EQ(str, "hello");
+}
+
+TEST(OutputStream, Write) {
+  std::stringstream output { };
+  auto stream = jvc::OutputStream::FromSTL(output);
+
+  ASSERT_EQ(stream->Write("hello", 5), 5) << "Write function does not return the size of the input buffer.";
+  ASSERT_EQ(stream->Write("world", 5), 5) << "Write function does not return the size of the input buffer.";
+
+  auto str = output.str();
+  ASSERT_EQ(str, "helloworld") << "Write function does not properly write contents into the inner STL stream.";
+}
+
+TEST(StreamWriter, WriteChar) {
+  std::stringstream output { };
+  jvc::StreamWriter writer { jvc::OutputStream::FromSTL(output) };
+
+  writer.WriteChar('h');
+  writer.WriteChar('e');
+
+  auto str = output.str();
+  ASSERT_EQ(str, "he") << "WriteChar function does not property write characters into the inner stream.";
+}
+
+TEST(StreamWriter, WriteString) {
+  std::stringstream output { };
+  jvc::StreamWriter writer { jvc::OutputStream::FromSTL(output) };
+
+  writer.Write("hello");
+  writer.Write(std::string("world"));
+
+  std::string tmp = "msr";
+  writer.Write(std::string_view { tmp });
+
+  auto str = output.str();
+  ASSERT_EQ(str, "helloworldmsr") << "Write functions does not property write strings into the inner stream.";
+}
+
+TEST(StreamWriter, WriteLine) {
+  std::stringstream output { };
+  jvc::StreamWriter writer { jvc::OutputStream::FromSTL(output) };
+
+  writer.WriteLine("hello");
+  writer.WriteLine(std::string("world"));
+
+  std::string tmp = "msr";
+  writer.WriteLine(std::string_view { tmp });
+
+  auto str = output.str();
+  ASSERT_EQ(str, "hello\nworld\nmsr\n")
+      << "Write function does not property write strings into the inner stream.";
+}
+
+TEST(StreamWriter, OutputBool) {
+  std::stringstream output { };
+  jvc::StreamWriter writer { jvc::OutputStream::FromSTL(output) };
+
+  writer << true << false << true;
+
+  auto str = output.str();
+  ASSERT_EQ(str, "truefalsetrue")
+      << "Output operator does not properly write boolean values into the inner stream.";
+}
+
+TEST(StreamWriter, OutputChar) {
+  std::stringstream output { };
+  jvc::StreamWriter writer { jvc::OutputStream::FromSTL(output) };
+
+  writer << 'h' << 'e';
+
+  auto str = output.str();
+  ASSERT_EQ(str, "he")
+                << "Output operator does not properly write characters into the inner stream.";
+}
+
+TEST(StreamWriter, OutputString) {
+  std::stringstream output { };
+  jvc::StreamWriter writer { jvc::OutputStream::FromSTL(output) };
+
+  std::string tmp = "msr";
+  writer << "hello" << std::string("world") << std::string_view { tmp };
+
+  auto str = output.str();
+  ASSERT_EQ(str, "helloworldmsr")
+      << "Output operator does not properly write strings into the inner stream.";
+}
+
+TEST(StreamWriter, OutputInteger) {
+  std::stringstream output { };
+  jvc::StreamWriter writer { jvc::OutputStream::FromSTL(output) };
+
+  writer << 10 << 20;
+
+  auto str = output.str();
+  ASSERT_EQ(str, "1020")
+      << "Output operator does not properly write integers into the inner stream.";
+}
+
 #pragma clang diagnostic pop
