@@ -51,10 +51,10 @@ public:
   static SourceFileInfo Load(int fileId, const std::string& path, std::unique_ptr<InputStream> inputData);
 
   SourceFileInfo(const SourceFileInfo &) = delete;
-  SourceFileInfo(SourceFileInfo &&) noexcept = default;
+  SourceFileInfo(SourceFileInfo &&) noexcept;
 
   SourceFileInfo& operator=(const SourceFileInfo &) = delete;
-  SourceFileInfo& operator=(SourceFileInfo &&) noexcept = default;
+  SourceFileInfo& operator=(SourceFileInfo &&) noexcept;
 
   /**
    * @brief Destroy this @see SourceFileInfo object.
@@ -101,6 +101,7 @@ public:
    * The given source location is considered invalid if any of the following conditions are true:
    * * The @class SourceLocation object itself is invalid;
    * * The source location is out of boundary.
+   * * The file ID of the location is not equal to the current source code file ID.
    *
    */
   [[nodiscard]]
@@ -111,7 +112,7 @@ public:
    * @return the whole content of the source code file.
    */
   [[nodiscard]]
-  std::string_view GetContent() const;
+  const std::string& GetContent() const;
 
   /**
    * @brief Create a @see InputStream for accessing contents in this source code file.

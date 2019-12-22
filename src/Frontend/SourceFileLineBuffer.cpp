@@ -25,10 +25,16 @@ std::unique_ptr<SourceFileInfo::SourceFileLineBuffer>
     }
   }
 
-  // The last element of lineStarts should be the total length of the content.
-  lineStarts.push_back(content.size());
-
   return std::make_unique<SourceFileInfo::SourceFileLineBuffer>(std::move(content), std::move(lineStarts));
+}
+
+size_t SourceFileInfo::SourceFileLineBuffer::GetLineWidth(size_t lineNumber) const {
+  if (lineNumber == lines()) {
+    return length() - _lineStarts.back();
+  }
+
+  --lineNumber;
+  return _lineStarts[lineNumber + 1] - _lineStarts[lineNumber];
 }
 
 std::string_view SourceFileInfo::SourceFileLineBuffer::GetViewInRange(int startRow, int endRow) const {

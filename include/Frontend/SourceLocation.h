@@ -64,6 +64,8 @@ public:
   [[nodiscard]]
   int col() const { return _col; }
 
+  friend bool operator==(const SourceLocation &, const SourceLocation &);
+
 private:
   static constexpr const int InvalidFileId = -1;
 
@@ -71,6 +73,20 @@ private:
   int _row;
   int _col;
 };
+
+inline bool operator==(const SourceLocation& lhs, const SourceLocation& rhs) {
+  if (!lhs.valid() && !rhs.valid()) {
+    return true;
+  }
+
+  return lhs._fileId == rhs._fileId &&
+      lhs._row == rhs._row &&
+      lhs._col == rhs._col;
+}
+
+inline bool operator!=(const SourceLocation& lhs, const SourceLocation& rhs) {
+  return !(lhs == rhs);
+}
 
 /**
  * @brief Represent a literal range in some source code file.
@@ -126,10 +142,25 @@ public:
   [[nodiscard]]
   bool valid() const { return _start.valid() && _end.valid() && _start.fileId() == _end.fileId(); }
 
+  friend bool operator==(const SourceRange &, const SourceRange &);
+
 private:
   SourceLocation _start;
   SourceLocation _end;
 };
+
+inline bool operator==(const SourceRange& lhs, const SourceRange& rhs) {
+  if (!lhs.valid() && !rhs.valid()) {
+    return true;
+  }
+
+  return lhs._start == rhs._start &&
+      lhs._end == rhs._end;
+}
+
+inline bool operator!=(const SourceRange& lhs, const SourceRange& rhs) {
+  return !(lhs == rhs);
+}
 
 }
 

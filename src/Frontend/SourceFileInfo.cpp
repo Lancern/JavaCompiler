@@ -20,6 +20,10 @@ SourceFileInfo::SourceFileInfo(int fileId, std::string path, std::unique_ptr<Sou
       _lineBuffer(std::move(lineBuffer))
 { }
 
+SourceFileInfo::SourceFileInfo(SourceFileInfo &&) noexcept = default;
+
+SourceFileInfo& SourceFileInfo::operator=(SourceFileInfo &&) noexcept = default;
+
 SourceFileInfo::~SourceFileInfo() = default;
 
 std::string_view SourceFileInfo::GetViewInRange(SourceRange range) const {
@@ -33,15 +37,20 @@ std::string_view SourceFileInfo::GetViewAtLoc(SourceLocation loc) const {
   if (!loc.valid()) {
     return std::string_view { };
   }
+  if (loc.fileId() != _id) {
+    return std::string_view { };
+  }
   return _lineBuffer->GetLineView(loc.row());
 }
 
-std::string_view SourceFileInfo::GetContent() const {
+const std::string& SourceFileInfo::GetContent() const {
   return _lineBuffer->content();
 }
 
 SourceLocation SourceFileInfo::GetEOFLoc() const {
-  return SourceLocation { _id, static_cast<int>(_lineBuffer->lines()), 1 };
+  auto lines = static_cast<int>(_lineBuffer->lines());
+  auto lastLineWidth = static_cast<int>(_lineBuffer->GetLineWidth(lines));
+  return SourceLocation { _id, lines, lastLineWidth + 1 };
 }
 
 std::unique_ptr<InputStream> SourceFileInfo::CreateInputStream() const {

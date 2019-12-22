@@ -26,6 +26,9 @@ public:
   size_t lines() const { return _lineStarts.size(); }
 
   [[nodiscard]]
+  size_t GetLineWidth(size_t lineNumber) const;
+
+  [[nodiscard]]
   std::string_view GetViewInRange(int startRow, int endRow) const;
 
   [[nodiscard]]
@@ -34,7 +37,10 @@ public:
   }
 
   [[nodiscard]]
-  std::string_view content() const { return _content; }
+  const std::string& content() const { return _content; }
+
+  [[nodiscard]]
+  size_t length() const { return content().size(); }
 
 private:
   std::string _content;
