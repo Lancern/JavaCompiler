@@ -174,4 +174,66 @@ TEST(StreamWriter, OutputInteger) {
       << "Output operator does not properly write integers into the inner stream.";
 }
 
+TEST(StreamWriter, SingleIndent) {
+  std::stringstream output { };
+  jvc::StreamWriter writer { jvc::OutputStream::FromSTL(output) };
+
+  writer.Write("hello");
+  {
+    auto indent = writer.PushIndent();
+    writer.WriteLine("world");
+    writer.WriteLine("msr\n\ntest");
+  }
+  writer.WriteLine("java");
+  writer.WriteLine("compiler");
+
+  auto str = output.str();
+  ASSERT_EQ(str, "helloworld\n  msr\n\n  test\njava\ncompiler\n")
+      << "Writer does not properly handle single level of indent.";
+}
+
+TEST(StreamWriter, MultipleLevelsOfIndent) {
+  std::stringstream output { };
+  jvc::StreamWriter writer { jvc::OutputStream::FromSTL(output) };
+
+  writer.WriteLine("hello");
+  {
+    auto indent1 = writer.PushIndent();
+    writer.WriteLine("world");
+    {
+      auto indent2 = writer.PushIndent();
+      writer.WriteLine("java");
+    }
+    writer.WriteLine("compiler");
+  }
+
+  auto str = output.str();
+  ASSERT_EQ(str, "hello\n  world\n    java\n  compiler\n")
+      << "Writer does not properly handle multiple levels of indent.";
+}
+
+TEST(StreamWriter, MultipleLevelsOfIndentWithGuardRelease) {
+  std::stringstream output { };
+  jvc::StreamWriter writer { jvc::OutputStream::FromSTL(output) };
+
+  writer.WriteLine("hello");
+  {
+    auto indent1 = writer.PushIndent();
+    writer.WriteLine("world");
+    {
+      auto indent2 = writer.PushIndent();
+      writer.WriteLine("java");
+      indent2.pop();
+      writer.WriteLine("compiler");
+      indent2.pop();
+      writer.WriteLine("jvc");
+    }
+    writer.WriteLine("msr");
+  }
+
+  auto str = output.str();
+  ASSERT_EQ(str, "hello\n  world\n    java\n  compiler\n  jvc\n  msr\n")
+                << "Writer does not properly handle multiple levels of indent when some guards are popped manually";
+}
+
 #pragma clang diagnostic pop

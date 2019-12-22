@@ -23,7 +23,10 @@ StreamWriterIndentGuard StreamWriter::PushIndent() {
 }
 
 void StreamWriter::WriteChar(char ch) {
-  writeIndentOnNecessary();
+  if (ch != '\n') {
+    // If the character is new line character, no indent should be added no matter where the writer pointer are.
+    writeIndentOnNecessary();
+  }
   _inner->Write(&ch, 1);
 
   if (ch == '\n') {
@@ -33,19 +36,20 @@ void StreamWriter::WriteChar(char ch) {
 
 void StreamWriter::Write(const char *s) {
   while (*s) {
+    if (*s == '\n') {
+      WriteChar('\n');
+      ++s;
+      continue;
+    }
+
     int window = 0;
     while (s[window] && s[window] != '\n') {
       ++window;
     }
 
+    writeIndentOnNecessary();
     _inner->Write(s, window);
-    if (s[window] == '\n') {
-      WriteChar('\n');
-      s += window + 1;
-    } else {
-      // s[window] == '\0'
-      break;
-    }
+    s += window;
   }
 }
 
@@ -74,8 +78,8 @@ void StreamWriter::writeIndentOnNecessary() {
     for (i = 0; i + bufSize < _indent; i += bufSize) {
       _inner->Write(buffer, sizeof(buffer));
     }
-    while (i < _indent) {
-      WriteChar(' ');
+    while (i++ < _indent) {
+      _inner->Write(" ", 1);
     }
   }
 
