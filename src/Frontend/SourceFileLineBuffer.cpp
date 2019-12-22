@@ -5,47 +5,17 @@
 #include "Infrastructure/Stream.h"
 #include "SourceFileLineBuffer.h"
 
-#include <fstream>
-#include <sstream>
+#include <cassert>
 #include <memory>
 
 namespace jvc {
 
-namespace {
-
-class LoadFileFailedDiagnosticsMessage : public DiagnosticsMessage {
-public:
-  explicit LoadFileFailedDiagnosticsMessage(const std::string& path, int errorCode)
-      : DiagnosticsMessage(DiagnosticsLevel::Fatal),
-        _path(path),
-        _errorCode(errorCode)
-  { }
-
-  void DumpMessage(StreamWriter &output) const override {
-    output << "cannot load source file: "
-           << _path << ": "
-           << std::strerror(_errorCode);
-  }
-
-private:
-  const std::string& _path;
-  int _errorCode;
-};
-
-} // namespace <anonymous>
-
 std::unique_ptr<SourceFileInfo::SourceFileLineBuffer>
-SourceFileInfo::SourceFileLineBuffer::Load(const std::string& path, DiagnosticsEngine& diag) {
-  std::ifstream fs { path };
-  if (fs.fail()) {
-    int errorCode = errno;
-    diag.Emit(LoadFileFailedDiagnosticsMessage { path, errorCode });
-  }
+    SourceFileInfo::SourceFileLineBuffer::Load(std::unique_ptr<InputStream> inputData) {
+  assert(inputData && "inputData is nullptr.");
 
-  // Read the whole content of the source code file into a stringstream.
-  std::stringstream contentStream;
-  contentStream << fs.rdbuf();
-  auto content = contentStream.str();
+  StreamReader reader { std::move(inputData) };
+  auto content = reader.ReadToEnd();
 
   std::vector<size_t> lineStarts;
   lineStarts.push_back(0);

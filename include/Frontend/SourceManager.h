@@ -29,12 +29,26 @@ private:
 
 public:
   /**
-   * @brief Initialize a new @class SourceFileInfo object.
-   * @param fileId the ID of the source code file.
+   * @brief Load the specified source code file and returns a @see SourceFileInfo object.
+   *
+   * If the source code file cannot be loaded, this function will emit a fatal diagnostics message through the given
+   * diagnostics engine.
+   *
+   * @param fileId the ID of the new source code file.
    * @param path the path to the source code file.
-   * @param lineBuffer the line buffer.
+   * @param diag the diagnostics engine.
+   * @return a @see SourceFileInfo object containing information about the loaded source code file.
    */
-  explicit SourceFileInfo(int fileId, std::string path, std::unique_ptr<SourceFileLineBuffer> lineBuffer);
+  static SourceFileInfo Load(int fileId, const std::string& path, DiagnosticsEngine& diag);
+
+  /**
+   * @brief Load the source code in the given input stream and returns a @see SourceFileInfo object.
+   * @param fileId the ID of the new source code file.
+   * @param path path to the source code file.
+   * @param inputData a @see std::unique_ptr to an @see InputStream object containing data of the source code file.
+   * @return a @see SourceFileInfo object containing information about the source code.
+   */
+  static SourceFileInfo Load(int fileId, const std::string& path, std::unique_ptr<InputStream> inputData);
 
   SourceFileInfo(const SourceFileInfo &) = delete;
   SourceFileInfo(SourceFileInfo &&) noexcept = default;
@@ -113,25 +127,18 @@ public:
   [[nodiscard]]
   SourceLocation GetEOFLoc() const;
 
-  friend class SourceManager;
-
 private:
   int _id;
   std::string _path;
   std::unique_ptr<SourceFileLineBuffer> _lineBuffer;
 
   /**
-   * @brief Load the specified source code file and returns a @see SourceFileInfo object.
-   *
-   * If the source code file cannot be loaded, this function will emit a fatal diagnostics message through the given
-   * diagnostics engine.
-   *
-   * @param fileId the ID of the new source code file.
+   * @brief Initialize a new @class SourceFileInfo object.
+   * @param fileId the ID of the source code file.
    * @param path the path to the source code file.
-   * @param diag the diagnostics engine.
-   * @return a @see SourceFileInfo object containing information about the loaded source code file.
+   * @param lineBuffer the line buffer.
    */
-  static SourceFileInfo Load(int fileId, const std::string& path, DiagnosticsEngine& diag);
+  explicit SourceFileInfo(int fileId, std::string path, std::unique_ptr<SourceFileLineBuffer> lineBuffer);
 }; // class SourceFileInfo
 
 /**

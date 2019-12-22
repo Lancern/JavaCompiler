@@ -98,6 +98,36 @@ protected:
   explicit OutputStream() = default;
 };
 
+/**
+ * @brief Formatted reader for @see InputStream.
+ */
+class StreamReader {
+public:
+  /**
+   * @brief Initialize a new @see StreamReader instance.
+   * @param inner the inner stream.
+   */
+  explicit StreamReader(std::unique_ptr<InputStream> inner)
+    : _inner(std::move(inner))
+  { }
+
+  /**
+   * @brief Get the underlying stream.
+   * @return the underlying stream.
+   */
+  [[nodiscard]]
+  InputStream& stream() const { return *_inner; }
+
+  /**
+   * @brief Read all contents contained in the underlying stream.
+   * @return a @see std::string object containing all data contained in the underlying stream.
+   */
+  std::string ReadToEnd();
+
+private:
+  std::unique_ptr<InputStream> _inner;
+};
+
 class StreamWriter;
 
 /**

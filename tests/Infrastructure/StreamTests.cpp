@@ -67,6 +67,14 @@ TEST(InputStream, Read) {
       << "Should return: `o`, but return: `" << outputBuffer << "`";
 }
 
+TEST(StreamReader, ReadToEnd) {
+  const char* inputBuffer = "hello";
+  jvc::StreamReader reader { jvc::InputStream::FromBuffer(inputBuffer, 5) };
+
+  auto output = reader.ReadToEnd();
+  ASSERT_EQ(output, "hello") << "ReadToEnd returns bad content.";
+}
+
 TEST(OutputStream, CreateFromSTL) {
   std::stringstream output { };
   auto stream = jvc::OutputStream::FromSTL(output);

@@ -7,11 +7,15 @@
 
 #include "Frontend/SourceManager.h"
 
+#include <memory>
+
 namespace jvc {
+
+class InputStream;
 
 class SourceFileInfo::SourceFileLineBuffer {
 public:
-  static std::unique_ptr<SourceFileLineBuffer> Load(const std::string& path, DiagnosticsEngine& diag);
+  static std::unique_ptr<SourceFileLineBuffer> Load(std::unique_ptr<InputStream> input);
 
   explicit SourceFileLineBuffer(std::string content, std::vector<size_t> lineStarts)
       : _content(std::move(content)),

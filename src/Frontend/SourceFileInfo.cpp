@@ -49,8 +49,41 @@ std::unique_ptr<InputStream> SourceFileInfo::CreateInputStream() const {
   return InputStream::FromBuffer(view.data(), view.size());
 }
 
+namespace {
+
+class LoadFileFailedDiagnosticsMessage : public DiagnosticsMessage {
+public:
+  explicit LoadFileFailedDiagnosticsMessage(const std::string& path, int errorCode)
+      : DiagnosticsMessage(DiagnosticsLevel::Fatal),
+        _path(path),
+        _errorCode(errorCode)
+  { }
+
+  void DumpMessage(StreamWriter &output) const override {
+    output << "cannot load source file: "
+           << _path << ": "
+           << std::strerror(_errorCode);
+  }
+
+private:
+  const std::string& _path;
+  int _errorCode;
+};
+
+} // namespace <anonymous>
+
 SourceFileInfo SourceFileInfo::Load(int fileId, const std::string& path, DiagnosticsEngine& diag) {
-  auto lineBuffer = SourceFileLineBuffer::Load(path, diag);
+  std::ifstream fs { path };
+  if (fs.fail()) {
+    int errorCode = errno;
+    diag.Emit(LoadFileFailedDiagnosticsMessage { path, errorCode });
+  }
+
+  return Load(fileId, path, InputStream::FromSTL(fs));
+}
+
+SourceFileInfo SourceFileInfo::Load(int fileId, const std::string& path, std::unique_ptr<InputStream> inputData) {
+  auto lineBuffer = SourceFileLineBuffer::Load(std::move(inputData));
   return SourceFileInfo { fileId, path, std::move(lineBuffer) };
 }
 
