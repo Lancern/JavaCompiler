@@ -7,9 +7,12 @@
 
 #include "Frontend/SourceLocation.h"
 
+#include <string>
 #include <string_view>
 
 namespace jvc {
+
+class StreamWriter;
 
 #define JVC_TOKEN_KIND_LIST(h) \
     h(Keyword) \
@@ -68,6 +71,12 @@ public:
    */
   [[nodiscard]]
   SourceRange range() const { return _range; }
+
+  /**
+   * @brief Dump current token to the given output stream.
+   * @param o output stream writer.
+   */
+  virtual void Dump(StreamWriter& o) const = 0;
 
 protected:
   /**
@@ -206,6 +215,8 @@ public:
   [[nodiscard]]
   bool IsTypeSpecifier() const { return jvc::IsTypeSpecifier(_keywordKind); }
 
+  void Dump(StreamWriter &o) const override;
+
 private:
   KeywordKind _keywordKind;
 }; // class KeywordToken
@@ -234,6 +245,8 @@ public:
    */
   [[nodiscard]]
   const std::string& name() const { return _name; }
+
+  void Dump(StreamWriter& o) const override;
 
 private:
   std::string _name;
@@ -401,6 +414,8 @@ public:
   [[nodiscard]]
   NumberLiteralSuffix suffix() const { return _suffix; }
 
+  void Dump(StreamWriter& o) const override;
+
 private:
   bool _isIntValue;
   int64_t _intValue;
@@ -440,6 +455,8 @@ public:
   [[nodiscard]]
   const std::string& content() const { return _content; }
 
+  void Dump(StreamWriter& o) const override;
+
 private:
   std::string _source;
   std::string _content;
@@ -475,6 +492,8 @@ public:
    */
   [[nodiscard]]
   char value() const { return _ch; }
+
+  void Dump(StreamWriter& o) const override;
 
 private:
   std::string _source;
@@ -528,6 +547,8 @@ public:
     bool Is##v() const { return delimiter() == DelimiterKind::v; }
   JVC_DELIMITER_LIST(GENERATE_IDENTITY_METHOD)
 #undef GENERATE_IDENTITY_METHOD
+
+  void Dump(StreamWriter& o) const override;
 
 private:
   DelimiterKind _kind;
@@ -603,6 +624,8 @@ public:
   [[nodiscard]]
   OperatorKind operatorKind() const { return _kind; }
 
+  void Dump(StreamWriter& o) const override;
+
 private:
   OperatorKind _kind;
 };
@@ -653,6 +676,8 @@ public:
   [[nodiscard]]
   const std::string& content() const { return _content; }
 
+  void Dump(StreamWriter& o) const override;
+
 private:
   CommentKind _kind;
   std::string _content;
@@ -670,6 +695,8 @@ public:
   explicit WhitespaceToken(SourceRange range)
     : Token { TokenKind::Whitespace, range }
   { }
+
+  void Dump(StreamWriter& o) const override;
 };
 
 } // namespace jvc

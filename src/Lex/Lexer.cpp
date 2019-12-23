@@ -556,17 +556,27 @@ void Lexer::lexNumberLiteralOrOperator(SourceLocation startLoc) {
       lexNumberLiteral(startLoc, ch);
       return;
     } else { // nextChar is not a digit
-      if (nextChar == '=' || nextChar == '+') {
+      if (nextChar == '=' || nextChar == ch) {
         consumeChar();
         auto endLoc = GetNextLocation();
         SourceRange range { startLoc, endLoc };
 
-        if (nextChar == '=') {
-          _peekBuffer = std::make_unique<OperatorToken>(OperatorKind::AddAssignment, range);
-        } else { // nextChar == '+'
-          _peekBuffer = std::make_unique<OperatorToken>(OperatorKind::Increment, range);
+        OperatorKind kind;
+        if (ch == '+') {
+          if (nextChar == '=') {
+            kind = OperatorKind::AddAssignment;
+          } else { // nextChar == '+'
+            kind = OperatorKind::Increment;
+          }
+        } else { // ch == '-'
+          if (nextChar == '=') {
+            kind = OperatorKind::SubtractAssignment;
+          } else { // nextChar == '-'
+            kind = OperatorKind::Decrement;
+          }
         }
 
+        _peekBuffer = std::make_unique<OperatorToken>(kind, range);
         return;
       }
     }
@@ -574,7 +584,7 @@ void Lexer::lexNumberLiteralOrOperator(SourceLocation startLoc) {
 
   auto endLoc = GetNextLocation();
   SourceRange range { startLoc, endLoc };
-  _peekBuffer = std::make_unique<OperatorToken>(OperatorKind::Add, range);
+  _peekBuffer = std::make_unique<OperatorToken>(ch == '+' ? OperatorKind::Add : OperatorKind::Subtract, range);
 }
 
 namespace {

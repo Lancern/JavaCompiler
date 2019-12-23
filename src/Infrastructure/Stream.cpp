@@ -5,6 +5,8 @@
 #include "Infrastructure/Stream.h"
 
 #include <algorithm>
+#include <fstream>
+#include <type_traits>
 
 namespace jvc {
 
@@ -62,6 +64,25 @@ private:
   std::ostream& _inner;
 };
 
+template <typename Inner>
+class STLOwnedOutputStream : public OutputStream {
+  static_assert(std::is_base_of_v<std::ostream, Inner>, "Inner does not derive from std::ostream.");
+
+public:
+  explicit STLOwnedOutputStream(Inner inner)
+    : _wrapper(inner),
+      _inner(std::move(inner))
+  { }
+
+  size_t Write(const void *buffer, size_t bufferSize) override {
+    return _wrapper.Write(buffer, bufferSize);
+  }
+
+private:
+  STLOutputStreamWrapper _wrapper;
+  Inner _inner;
+};
+
 } // namespace anonymous
 
 std::unique_ptr<InputStream> InputStream::FromSTL(std::istream &inner) {
@@ -74,6 +95,15 @@ std::unique_ptr<InputStream> InputStream::FromBuffer(const void *buffer, size_t 
 
 std::unique_ptr<OutputStream> OutputStream::FromSTL(std::ostream &inner) {
   return std::make_unique<STLOutputStreamWrapper>(inner);
+}
+
+std::unique_ptr<OutputStream> OutputStream::FromFile(const std::string& filename) {
+  std::ofstream fs { filename };
+  if (fs.fail()) {
+    return nullptr;
+  }
+
+  return std::make_unique<STLOwnedOutputStream<decltype(fs)>>(std::move(fs));
 }
 
 namespace {

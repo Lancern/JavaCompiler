@@ -73,6 +73,14 @@ public:
   static std::unique_ptr<OutputStream> FromSTL(std::ostream& inner);
 
   /**
+   * @brief Create an @see OutputStream wrapper that writes contents to the given file.
+   * @param filename the name of the output file.
+   * @return a @see std::unique_ptr to the created @see OutputStream object. This function returns nullptr if any errors
+   * occured.
+   */
+  static std::unique_ptr<OutputStream> FromFile(const std::string& filename);
+
+  /**
    * @brief Destroy a @see OutputStream object.
    */
   virtual ~OutputStream() = default;

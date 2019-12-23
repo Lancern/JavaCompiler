@@ -230,6 +230,13 @@ public:
    */
   int Load(const std::string& name, std::unique_ptr<InputStream> dataStream);
 
+  /**
+   * @brief Get the number of loaded source code files.
+   * @return the number of loaded source code files.
+   */
+  [[nodiscard]]
+  size_t size() const { return _sources.size(); }
+
 private:
   CompilerInstance& _ci;
   std::unordered_map<int, SourceFileInfo> _sources;

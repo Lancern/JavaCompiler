@@ -68,28 +68,6 @@ const char* getDiagLevelName(DiagnosticsLevel level) {
   }
 }
 
-void dumpSourceLoc(SourceLocation loc) {
-  auto& o = errs();
-  if (!loc.valid()) {
-    o << "<invalid loc>";
-    return;
-  }
-
-  o << loc.row() << ':' << loc.col();
-}
-
-void dumpSourceRange(SourceRange range) {
-  auto& o = errs();
-  if (!range.valid()) {
-    o << "<invalid range>";
-    return;
-  }
-
-  dumpSourceLoc(range.start());
-  o << '-';
-  dumpSourceLoc(range.end());
-}
-
 } // namespace <anonymous>
 
 void DiagnosticsEngine::Emit(const DiagnosticsMessage& message) {
@@ -106,12 +84,25 @@ void DiagnosticsEngine::Emit(const DiagnosticsMessage& message) {
       auto indGuard1 = o.PushIndent();
 
       o << "In file " << sourceFileInfo->path() << ':';
-      dumpSourceRange(message.range());
+      message.range().Dump(o);
       o << ":\n";
 
       auto indGuard2 = o.PushIndent();
       auto sourceView = sourceFileInfo->GetViewInRange(message.range());
-      o << sourceView << '\n';
+      o << sourceView;
+      if (sourceView.back() != '\n') {
+        o << '\n';
+      }
+
+      if (message.range().start().row() == message.range().end().row()) {
+        for (auto i = 1; i < message.range().start().col(); ++i) {
+          o << ' ';
+        }
+        o << '^';
+        for (auto i = message.range().start().col() + 1; i < message.range().end().col(); ++i) {
+          o << '~';
+        }
+      }
     }
   } else if (message.location().valid()) {
     auto sourceFileInfo = _ci.GetSourceManager().GetSourceFileInfo(message.location());
@@ -119,12 +110,20 @@ void DiagnosticsEngine::Emit(const DiagnosticsMessage& message) {
       auto indGuard1 = o.PushIndent();
 
       o << "In file " << sourceFileInfo->path() << ':';
-      dumpSourceLoc(message.location());
+      message.location().Dump(o);
       o << ":\n";
 
       auto indGuard2 = o.PushIndent();
       auto sourceView = sourceFileInfo->GetViewAtLoc(message.location());
-      o << sourceView << '\n';
+      o << sourceView;
+      if (sourceView.back() != '\n') {
+        o << '\n';
+      }
+
+      for (auto i = 1; i < message.range().start().col(); ++i) {
+        o << ' ';
+      }
+      o << '^';
     }
   }
 

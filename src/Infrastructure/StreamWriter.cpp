@@ -35,10 +35,18 @@ void StreamWriter::WriteChar(char ch) {
 }
 
 void StreamWriter::Write(const char *s) {
-  while (*s) {
-    if (*s == '\n') {
+  Write(std::string_view { s });
+}
+
+void StreamWriter::Write(const std::string &s) {
+  Write(std::string_view { s });
+}
+
+void StreamWriter::Write(std::string_view s) {
+  while (!s.empty()) {
+    if (s.front() == '\n') {
       WriteChar('\n');
-      ++s;
+      s.remove_prefix(1);
       continue;
     }
 
@@ -48,17 +56,9 @@ void StreamWriter::Write(const char *s) {
     }
 
     writeIndentOnNecessary();
-    _inner->Write(s, window);
-    s += window;
+    _inner->Write(s.data(), window);
+    s.remove_prefix(window);
   }
-}
-
-void StreamWriter::Write(const std::string &s) {
-  _inner->Write(s.data(), s.size());
-}
-
-void StreamWriter::Write(std::string_view s) {
-  _inner->Write(s.data(), s.size());
 }
 
 void StreamWriter::popIndent() {

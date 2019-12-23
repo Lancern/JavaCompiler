@@ -9,6 +9,8 @@
 
 namespace jvc {
 
+class StreamWriter;
+
 /**
  * @brief Provide a handle for a location in the source code. This class is designed to be small enough to be copied
  * efficiently.
@@ -63,6 +65,12 @@ public:
    */
   [[nodiscard]]
   int col() const { return _col; }
+
+  /**
+   * @brief Dump this @see SourceLocation object to the given output stream.
+   * @param output the output stream writer.
+   */
+  void Dump(StreamWriter& output) const;
 
   friend bool operator==(const SourceLocation &, const SourceLocation &);
 
@@ -141,6 +149,12 @@ public:
    */
   [[nodiscard]]
   bool valid() const { return _start.valid() && _end.valid() && _start.fileId() == _end.fileId(); }
+
+  /**
+   * @brief Dump this @see SourceRange object to the given output stream.
+   * @param output output stream writer.
+   */
+  void Dump(StreamWriter& output) const;
 
   friend bool operator==(const SourceRange &, const SourceRange &);
 
