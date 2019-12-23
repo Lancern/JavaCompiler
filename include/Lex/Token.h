@@ -155,7 +155,7 @@ enum class KeywordKind {
  * @return true if the keyword is a type specifier.
  * @return false if the keyword is not a type specifier.
  */
-bool IsTypeSpecifier(KeywordKind keyword) {
+inline bool IsTypeSpecifier(KeywordKind keyword) {
   return keyword == KeywordKind::Boolean ||
       keyword == KeywordKind::Byte ||
       keyword == KeywordKind::Char ||

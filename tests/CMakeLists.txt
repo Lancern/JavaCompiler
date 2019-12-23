@@ -1,7 +1,8 @@
 add_executable(JVCUnitTest
         main.cpp
         Infrastructure/StreamTests.cpp
-        Frontend/SourceFileInfoTests.cpp)
+        Frontend/SourceFileInfoTests.cpp
+        Lex/LexerTests.cpp)
 
 set(gtest_include_dir "${CMAKE_SOURCE_DIR}/libs/googletest/googletest/include")
 

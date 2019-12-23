@@ -6,14 +6,13 @@
 #include "Frontend/SourceLocation.h"
 #include "Lex/Lexer.h"
 #include "Lex/Token.h"
-#include "Lex/SourceLocationBuilder.h"
 #include "LexerStreamReader.h"
 
 #include <cctype>
+#include <cmath>
 #include <unordered_map>
 #include <type_traits>
 #include <limits>
-#include <cmath>
 
 namespace jvc {
 
@@ -131,8 +130,8 @@ void Lexer::peek() {
     return;
   }
 
-  if (std::isdigit(ch) || ch == '+' || ch == '-') {
-    lexNumberLiteral(startLoc);
+  if (std::isdigit(ch)) {
+    lexNumberLiteral(startLoc, std::optional<char> { });
     return;
   }
 
@@ -152,9 +151,14 @@ void Lexer::peek() {
     return;
   }
 
-  if (ch == '+' || ch == '&' || ch == '=' || ch == '~' || ch == '|' || ch == '^' || ch == '?' || ch == ':' ||
-      ch == '-' || ch == '>' || ch == '<' || ch == '%' || ch == '*' || ch == '!') {
+  if (ch == '&' || ch == '=' || ch == '~' || ch == '|' || ch == '^' || ch == '?' || ch == ':' || ch == '>' ||
+      ch == '<' || ch == '%' || ch == '*' || ch == '!') {
     lexOperator(startLoc);
+    return;
+  }
+
+  if (ch == '+' || ch == '-') {
+    lexNumberLiteralOrOperator(startLoc);
     return;
   }
 
@@ -541,6 +545,38 @@ void Lexer::lexOctCharLiteral(char leader, std::string& literal, std::string& co
   }
 }
 
+void Lexer::lexNumberLiteralOrOperator(SourceLocation startLoc) {
+  auto ch = ensureReadChar();
+  assert((ch == '+' || ch == '-') &&
+      "next character is not as expected to be the start of a number literal or an operator.");
+
+  char nextChar;
+  if (peekChar(nextChar)) {
+    if (std::isdigit(nextChar)) {
+      lexNumberLiteral(startLoc, ch);
+      return;
+    } else { // nextChar is not a digit
+      if (nextChar == '=' || nextChar == '+') {
+        consumeChar();
+        auto endLoc = GetNextLocation();
+        SourceRange range { startLoc, endLoc };
+
+        if (nextChar == '=') {
+          _peekBuffer = std::make_unique<OperatorToken>(OperatorKind::AddAssignment, range);
+        } else { // nextChar == '+'
+          _peekBuffer = std::make_unique<OperatorToken>(OperatorKind::Increment, range);
+        }
+
+        return;
+      }
+    }
+  }
+
+  auto endLoc = GetNextLocation();
+  SourceRange range { startLoc, endLoc };
+  _peekBuffer = std::make_unique<OperatorToken>(OperatorKind::Add, range);
+}
+
 namespace {
 
 int getBase(NumberLiteralPrefix prefix) {
@@ -659,25 +695,21 @@ bool tryAppendIntegralDigit(T& value, int base, int d, bool& fit) {
 
 } // namespace <anonymous>
 
-void Lexer::lexNumberLiteral(SourceLocation startLoc) {
+void Lexer::lexNumberLiteral(SourceLocation startLoc, std::optional<char> sign) {
   // Regular expression for identifying number literals:
   //  [+-]?(0|0x|0X)?[0-9a-fA-F]+((\.?[0-9a-fA-F]+)([eE][+-]?\d+)?)?[lLfF]?
 
-  auto ch = ensureReadChar();
-
-  auto negative = false;
-  if (ch == '+' || ch == '-') {
-    negative = (ch == '-');
-    ch = ensureReadChar();
-  }
+  auto negative = sign.has_value() && sign.value() == '-';
 
   auto prefix = NumberLiteralPrefix::None;
+  auto ch = ensurePeekChar();
   if (ch == '0') {
     if (peekChar(ch)) {
       if (ch == 'x' || ch == 'X') {
         consumeChar();
         prefix = NumberLiteralPrefix::Hex;
       } else if (isOct(ch)) {
+        consumeChar();
         prefix = NumberLiteralPrefix::Oct;
       }
     }
@@ -706,20 +738,27 @@ void Lexer::lexNumberLiteral(SourceLocation startLoc) {
     if (ch == '.') {
       consumeChar();
 
-      const double fractionalScale = 1.0 / base;
+      double fractionalScale = 1.0 / base;
       while (peekChar(ch) && isDigitUnderPrefix(ch, prefix)) {
         consumeChar();
         auto d = parseHex(ch);
 
         fpValue += d * fractionalScale;
+        fractionalScale /= base;
       }
     }
   }
 
   if (peekChar(ch) && (ch == 'e' || ch == 'E')) {
     consumeChar();
+    auto exponentSign = false;
     auto exponent = 0;
     auto exponentFit = true;
+
+    if (peekChar(ch) && (ch == '+' || ch == '-')) {
+      consumeChar();
+      exponentSign = (ch == '-');
+    }
 
     while (peekChar(ch) && std::isdigit(ch)) {
       consumeChar();
@@ -728,6 +767,9 @@ void Lexer::lexNumberLiteral(SourceLocation startLoc) {
     }
 
     if (exponentFit) {
+      if (exponentSign) {
+        exponent = -exponent;
+      }
       fpValue *= std::pow(10.0, static_cast<double>(exponent));
     } else {
       fpValue = std::numeric_limits<double>::infinity();
@@ -744,7 +786,7 @@ void Lexer::lexNumberLiteral(SourceLocation startLoc) {
     }
   }
 
-  auto f64Fit = std::isinf(fpValue);
+  auto f64Fit = !std::isinf(fpValue);
 
   if (i64Fit && negative) {
     i64Value = -i64Value;

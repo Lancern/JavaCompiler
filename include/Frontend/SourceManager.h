@@ -222,9 +222,20 @@ public:
    */
   int Load(const std::string& path);
 
+  /**
+   * @brief Load the source code contained in the given data stream.
+   * @param name the name of the source code file.
+   * @param dataStream an @see InputStream object containing the source code.
+   * @return ID of the source code file.
+   */
+  int Load(const std::string& name, std::unique_ptr<InputStream> dataStream);
+
 private:
   CompilerInstance& _ci;
   std::unordered_map<int, SourceFileInfo> _sources;
+
+  [[nodiscard]]
+  int getNextFileId() const;
 }; // class SourceManager
 
 } // namespace jvc

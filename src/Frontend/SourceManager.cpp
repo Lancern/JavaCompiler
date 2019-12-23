@@ -2,6 +2,7 @@
 // Created by Sirui Mu on 2019/12/18.
 //
 
+#include "Infrastructure/Stream.h"
 #include "Frontend/CompilerInstance.h"
 #include "Frontend/SourceManager.h"
 #include "Frontend/Diagnostics.h"
@@ -31,12 +32,25 @@ SourceLocation SourceManager::GetLocForEndOfFile(int fileId) const {
 }
 
 int SourceManager::Load(const std::string &path) {
-  auto fileId = static_cast<int>(_sources.size()) + 1;
+  auto fileId = getNextFileId();
 
   auto sourceFileInfo = SourceFileInfo::Load(fileId, path, _ci.GetDiagnosticsEngine());
   _sources.emplace(fileId, std::move(sourceFileInfo));
 
   return fileId;
+}
+
+int SourceManager::Load(const std::string &name, std::unique_ptr<InputStream> dataStream) {
+  auto fileId = getNextFileId();
+
+  auto sourceFileInfo = SourceFileInfo::Load(fileId, name, std::move(dataStream));
+  _sources.emplace(fileId, std::move(sourceFileInfo));
+
+  return fileId;
+}
+
+int SourceManager::getNextFileId() const {
+  return static_cast<int>(_sources.size()) + 1;
 }
 
 } // namespace jvc

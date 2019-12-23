@@ -54,7 +54,7 @@ SourceLocation SourceFileInfo::GetEOFLoc() const {
 }
 
 std::unique_ptr<InputStream> SourceFileInfo::CreateInputStream() const {
-  auto view = _lineBuffer->content();
+  const auto& view = _lineBuffer->content();
   return InputStream::FromBuffer(view.data(), view.size());
 }
 

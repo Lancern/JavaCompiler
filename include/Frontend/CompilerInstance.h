@@ -8,6 +8,8 @@
 #include "Frontend/Diagnostics.h"
 #include "Frontend/SourceManager.h"
 
+#include <memory>
+
 namespace jvc {
 
 /**
@@ -15,6 +17,14 @@ namespace jvc {
  */
 class CompilerInstance {
 public:
+  /**
+   * @brief Create a new @see CompilerInstance object.
+   */
+  explicit CompilerInstance()
+    : _diag(std::make_unique<DiagnosticsEngine>(*this)),
+      _sources(std::make_unique<SourceManager>(*this))
+  { }
+
   /**
    * @brief Get the diagnostics engine.
    * @return the diagnostics engine.

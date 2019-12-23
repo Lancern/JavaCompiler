@@ -10,6 +10,7 @@
 #include "Lex/SourceLocationBuilder.h"
 
 #include <memory>
+#include <optional>
 
 namespace jvc {
 
@@ -35,7 +36,6 @@ struct LexerOptions {
  */
 class Lexer {
   class LexerStreamReader;
-  class TokenBuilder;
 
 public:
   /**
@@ -192,7 +192,8 @@ private:
   void lexStringEscapeSequence(std::string& literal, std::string& content);
   void lexUnicodeCharLiteral(std::string& literal, std::string& content);
   void lexOctCharLiteral(char leader, std::string& literal, std::string& content);
-  void lexNumberLiteral(SourceLocation startLoc);
+  void lexNumberLiteralOrOperator(SourceLocation startLoc);
+  void lexNumberLiteral(SourceLocation startLoc, std::optional<char> sign);
   void lexDelimiter(SourceLocation startLoc);
   void lexOperator(SourceLocation startLoc);
   void lexDivideOperatorOrComment(SourceLocation startLoc);
